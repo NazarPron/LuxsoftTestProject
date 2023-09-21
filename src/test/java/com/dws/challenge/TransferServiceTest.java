@@ -49,7 +49,6 @@ class TransferServiceTest {
         }
     }
 
-
     @Test
     public void transferOutOfBalance() {
         Account account1 = new Account("ID1", BigDecimal.ONE);
@@ -62,24 +61,24 @@ class TransferServiceTest {
         }
     }
 
-
     @Test
     public void transferConcurrent() throws ExecutionException, InterruptedException {
-        ExecutorService service = Executors.newFixedThreadPool(10);
-        Account a1 = new Account("ID1", BigDecimal.valueOf(10000));
-        Account a2 = new Account("ID2", BigDecimal.valueOf(10000));
-        Account a3 = new Account("ID3", BigDecimal.valueOf(10000));
-        CompletableFuture<Void> f1 = CompletableFuture.runAsync(() -> transferFunction(a1, a2), service);
-        CompletableFuture<Void> f2 = CompletableFuture.runAsync(() -> transferFunction(a3, a1), service);
-        CompletableFuture<Void> f3 = CompletableFuture.runAsync(() -> transferFunction(a2, a3), service);
+        int countOfTrans = 10000;
+        ExecutorService service = Executors.newFixedThreadPool(3);
+        Account a1 = new Account("ID1", BigDecimal.valueOf(countOfTrans));
+        Account a2 = new Account("ID2", BigDecimal.valueOf(countOfTrans));
+        Account a3 = new Account("ID3", BigDecimal.valueOf(countOfTrans));
+        CompletableFuture<Void> f1 = CompletableFuture.runAsync(() -> transferFunction(a1, a2,countOfTrans), service);
+        CompletableFuture<Void> f2 = CompletableFuture.runAsync(() -> transferFunction(a3, a1,countOfTrans), service);
+        CompletableFuture<Void> f3 = CompletableFuture.runAsync(() -> transferFunction(a2, a3,countOfTrans), service);
         f1.get();
         f2.get();
         f3.get();
-        assertAll(() -> assertThat(a1.getBalance()).isEqualTo(BigDecimal.valueOf(10000)), () -> assertThat(a2.getBalance()).isEqualTo(BigDecimal.valueOf(10000)), () -> assertThat(a3.getBalance()).isEqualTo(BigDecimal.valueOf(10000)));
+        assertAll(() -> assertThat(a1.getBalance()).isEqualTo(BigDecimal.valueOf(countOfTrans)), () -> assertThat(a2.getBalance()).isEqualTo(BigDecimal.valueOf(countOfTrans)), () -> assertThat(a3.getBalance()).isEqualTo(BigDecimal.valueOf(countOfTrans)));
     }
 
-    private void transferFunction(Account a, Account b) {
-        for (int i = 1; i < 10000; i++) {
+    private void transferFunction(Account a, Account b,int countOfTrans) {
+        for (int i = 1; i < countOfTrans; i++) {
             transferService.transfer(a, b, BigDecimal.ONE);
         }
     }
